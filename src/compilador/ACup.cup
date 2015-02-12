@@ -1,0 +1,72 @@
+/*­­­­Sección de declaraciones package e imports­­­­­­­­­*/
+package compilador;
+import java_cup.runtime.*;
+
+/*­­­­ Sección componentes de código de usuario ­­­­*/
+parser code {:
+    public void report_error(String message, Object info) {
+        StringBuffer m = new StringBuffer("Error");
+        System.out.println("Mensaje: " + message);
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+            /* Comprueba si el numero de línea es mayor o igual que cero */
+            if (s.left >= 0) {
+                m.append(" en linea " + (s.left));
+                /*Comprueba si el numero de columna es mayoro igual que cero */
+                if (s.right >= 0) {
+                    m.append(", y columna " + (s.right + 1));
+                }
+            }
+            if (info.toString().equals("#7") || info.toString().equals("#2")) {
+                m.append("\nSe esperaba una unidad 'm', 'cm', 'ft', 'in'");
+            } else {
+                if (info.toString().equals("#3")||info.toString().equals("#6")||info.toString().equals("#5")||info.toString().equals("#4")) {
+                    if(s.left>=0&&s.left<4)
+                        m.append("\nSe esperaba un número");
+                    else
+                        m.append("\nSe esperaba operador '*'");
+                } else {
+                    if (info.toString().equals("#0")) {
+                        m.append("\nSe esperaba fin de línea ';'");
+                    }
+                }
+            }
+
+        }
+        m.append(" : " + message);
+        System.err.println(m);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+       	//report_error(message, info);
+    }
+
+public String conversion(String entrada, String salida, Double n){
+	Double a=0.0,b=0.0;
+        String respuesta= n+" "+entrada;	
+	if (entrada=="m") a=n;
+	else if (entrada=="cm")a=n*0.01; 
+	else if (entrada=="ft") a=n*0.3048;	 
+	else if (entrada=="in") a=n*0.0254;	 
+	
+	if (salida=="m") b=a;
+	else if (salida=="cm") b=a*100;
+	else if (salida=="ft") b=a*3.2808399;
+	else if (salida=="in") b=a*39.3700787;
+	return respuesta +" equivale a "+b+" "+salida+" ";
+}
+
+
+
+:};
+
+terminal SALTO, METRO, CENTIMETRO, PULGADAS, PIES, CONVERTIR;
+terminal Double NUMERO;
+non terminal sentencia, linea, unidad;
+
+/*Declaración de la gramática*/
+
+sentencia ::= sentencia linea| linea;
+linea ::= NUMERO:n unidad:e CONVERTIR unidad:s SALTO
+{:System.out.println(parser.conversion(e.toString(), s.toString(), n));:};
+unidad::= METRO{:RESULT= "m";:}|CENTIMETRO{:RESULT= "cm";:}|PULGADAS {:RESULT= "in";:}|PIES{:RESULT= "ft";:};
